@@ -1,0 +1,286 @@
+name: Build Dua & Zikr APK
+
+"on":
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Validate and Build APK
+    runs-on: ubuntu-latest
+
+    env:
+      JAVA_VERSION: "17"
+      ANDROID_COMPILE_SDK: "34"
+      ANDROID_BUILD_TOOLS: "34.0.0"
+      RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+      RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+      RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+      RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Locate Android project root
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]; then
+            PROJECT_DIR="."
+          elif [ -f "AzkarTvDisplay/settings.gradle" ] || [ -f "AzkarTvDisplay/settings.gradle.kts" ]; then
+            PROJECT_DIR="AzkarTvDisplay"
+          else
+            echo "::error::settings.gradle not found. Upload the Android project root correctly."
+            echo "Expected files: .github/workflows/build-apk.yml, settings.gradle, build.gradle, app/build.gradle, app/src/main/AndroidManifest.xml"
+            exit 1
+          fi
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Android project root detected: $PROJECT_DIR"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+          cache-dependency-path: |
+            gradle/wrapper/gradle-wrapper.properties
+            **/*.gradle
+            **/*.gradle.kts
+            AzkarTvDisplay/gradle/wrapper/gradle-wrapper.properties
+            AzkarTvDisplay/**/*.gradle
+            AzkarTvDisplay/**/*.gradle.kts
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+
+      - name: Install required Android SDK packages
+        shell: bash
+        run: |
+          sdkmanager \
+            "platforms;android-${ANDROID_COMPILE_SDK}" \
+            "build-tools;${ANDROID_BUILD_TOOLS}" \
+            "platform-tools"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate required project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+
+          required_files=(
+            "settings.gradle"
+            "build.gradle"
+            "gradle.properties"
+            "gradlew"
+            "gradlew.bat"
+            "gradle/wrapper/gradle-wrapper.jar"
+            "gradle/wrapper/gradle-wrapper.properties"
+            "app/build.gradle"
+            "app/src/main/AndroidManifest.xml"
+            "app/src/main/java/com/ahmed/azkartv/MainActivity.kt"
+            "app/src/main/assets/index.html"
+            "app/src/main/assets/app.css"
+            "app/src/main/assets/app.js"
+            "app/src/main/assets/content/content.json"
+            "app/src/main/assets/content/sections.json"
+            "tools/validate.py"
+            "tools/test_logic.py"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "::error::Missing required file: $file"
+              exit 1
+            fi
+          done
+
+          echo "All required project files are present."
+
+      - name: Validate JSON content files
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+
+          python3 - <<'PY'
+          import glob
+          import json
+          import sys
+
+          failed = False
+
+          for path in sorted(glob.glob("app/src/main/assets/content/*.json")):
+              try:
+                  with open(path, "r", encoding="utf-8") as file:
+                      json.load(file)
+                  print(f"Valid JSON: {path}")
+              except Exception as error:
+                  print(f"::error::Invalid JSON in {path}: {error}")
+                  failed = True
+
+          if failed:
+              sys.exit(1)
+          PY
+
+      - name: Run content validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          python3 tools/validate.py
+
+      - name: Run logic tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          python3 tools/test_logic.py
+
+      - name: JavaScript syntax check
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          node --check app/src/main/assets/app.js
+
+      - name: Confirm removed feature references
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+
+          if grep -RIn "audioBase\|recAudio\|recBtn" app/src/main/assets app/src/main/java app/src/main/res 2>/dev/null; then
+            echo "::error::Removed audio feature references still exist."
+            exit 1
+          fi
+
+          echo "Removed feature references are clear."
+
+      - name: Make Gradle wrapper executable
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          chmod +x ./gradlew
+          ./gradlew --version
+
+      - name: Prepare release signing key when secrets exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+
+          if [ -n "${RELEASE_KEYSTORE_BASE64:-}" ] && \
+             [ -n "${RELEASE_KEYSTORE_PASSWORD:-}" ] && \
+             [ -n "${RELEASE_KEY_ALIAS:-}" ] && \
+             [ -n "${RELEASE_KEY_PASSWORD:-}" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > azkar-release.jks
+            echo "HAS_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
+            echo "Release signing key prepared."
+          else
+            echo "HAS_RELEASE_SIGNING=false" >> "$GITHUB_ENV"
+            echo "Release signing secrets not found. Debug APK will still be built."
+          fi
+
+      - name: Build debug APK with retry
+        shell: bash
+        run: |
+          cd "$PROJECT_DIR"
+          set +e
+
+          for attempt in 1 2 3; do
+            echo "::group::Debug build attempt ${attempt} of 3"
+
+            ./gradlew --no-daemon --stacktrace --warning-mode all :app:assembleDebug
+            status=$?
+
+            echo "::endgroup::"
+
+            if [ "$status" -eq 0 ]; then
+              echo "Debug build succeeded on attempt ${attempt}."
+              exit 0
+            fi
+
+            echo "Debug build attempt ${attempt} failed with exit code ${status}."
+
+            if [ "$attempt" -lt 3 ]; then
+              echo "Cleaning partial Gradle wrapper downloads before retry."
+              rm -rf ~/.gradle/wrapper/dists/gradle-* || true
+              sleep 30
+            fi
+          done
+
+          echo "::error::Debug build failed after 3 attempts."
+          exit 1
+
+      - name: Build signed release APK when signing key exists
+        if: env.HAS_RELEASE_SIGNING == 'true'
+        shell: bash
+        env:
+          KEYSTORE_FILE: azkar-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          ./gradlew --no-daemon --stacktrace --warning-mode all :app:assembleRelease
+
+      - name: Confirm APK output
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+
+          echo "Generated APK files:"
+          find app/build/outputs/apk -type f -name "*.apk" -print -exec ls -lah {} \;
+
+          test -f app/build/outputs/apk/debug/app-debug.apk || {
+            echo "::error::Debug APK not generated."
+            exit 1
+          }
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dua-and-zikr-debug-apk
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            AzkarTvDisplay/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload signed release APK artifact
+        if: env.HAS_RELEASE_SIGNING == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dua-and-zikr-signed-release-apk
+          path: |
+            app/build/outputs/apk/release/*.apk
+            AzkarTvDisplay/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30
