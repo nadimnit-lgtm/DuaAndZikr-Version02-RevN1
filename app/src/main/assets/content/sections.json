@@ -1,0 +1,98 @@
+{
+  "version_name": "Version 02 Rev N",
+  "sections": [
+    {
+      "key": "quranic_duas",
+      "label": "Quranic Duas",
+      "type": "Dua",
+      "count": 40
+    },
+    {
+      "key": "daily_life_duas",
+      "label": "Daily Life Duas",
+      "type": "Dua",
+      "count": 40
+    },
+    {
+      "key": "dua",
+      "label": "Dua",
+      "type": "Dua",
+      "count": 14
+    },
+    {
+      "key": "morning_azkar",
+      "label": "Morning Azkar",
+      "type": "Azkar",
+      "count": 11
+    },
+    {
+      "key": "evening_azkar",
+      "label": "Evening Azkar",
+      "type": "Azkar",
+      "count": 5
+    },
+    {
+      "key": "before_salah",
+      "label": "Before Salah",
+      "type": "Dua",
+      "count": 6
+    },
+    {
+      "key": "in_salah",
+      "label": "Inside Salah",
+      "type": "Azkar",
+      "count": 25
+    },
+    {
+      "key": "after_salah_azkar",
+      "label": "After Salah Azkar",
+      "type": "Azkar",
+      "count": 13
+    },
+    {
+      "key": "before_sleep_azkar",
+      "label": "Before Sleep Azkar",
+      "type": "Azkar",
+      "count": 8
+    },
+    {
+      "key": "azkar",
+      "label": "Azkar",
+      "type": "Azkar",
+      "count": 5
+    },
+    {
+      "key": "protection_ruqyah",
+      "label": "Protection and Ruqyah",
+      "type": "Azkar",
+      "count": 12
+    },
+    {
+      "key": "istighfar",
+      "label": "Istighfar",
+      "type": "Istighfar",
+      "count": 12
+    },
+    {
+      "key": "salawat",
+      "label": "Salawat",
+      "type": "Salawat",
+      "count": 14
+    },
+    {
+      "key": "kalima",
+      "label": "Kalima",
+      "type": "Kalima",
+      "count": 6
+    }
+  ],
+  "cities": [
+    "auto",
+    "riyadh",
+    "jeddah",
+    "makkah",
+    "madinah",
+    "dammam"
+  ],
+  "content_version": "4.0.0"
+}

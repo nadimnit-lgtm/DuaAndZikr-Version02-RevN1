@@ -1,0 +1,713 @@
+/* ==========================================================================
+   Azkar TV Display — Version 02
+   Mobile / tablet / Android-TV Islamic reading interface.
+   Premium calm theme, Indo-Pak Arabic, elderly Easy View, D-pad ready.
+   ========================================================================== */
+
+/* ---- Fonts --------------------------------------------------------------- */
+@font-face { font-family:"Amiri"; src:url("fonts/Amiri-Regular.ttf") format("truetype"); font-weight:400; font-display:swap; }
+@font-face { font-family:"Amiri"; src:url("fonts/Amiri-Bold.ttf") format("truetype"); font-weight:700; font-display:swap; }
+@font-face { font-family:"Scheherazade"; src:url("fonts/ScheherazadeNew-Regular.ttf") format("truetype"); font-weight:400; font-display:swap; }
+@font-face { font-family:"Scheherazade"; src:url("fonts/ScheherazadeNew-Bold.ttf") format("truetype"); font-weight:700; font-display:swap; }
+@font-face { font-family:"ReemKufi"; src:url("fonts/ReemKufi.ttf") format("truetype"); font-weight:400 600; font-display:swap; }
+/* Indo-Pak Nastaliq (Noto Nastaliq Urdu, SIL OFL) */
+@font-face { font-family:"NastaliqUrdu"; src:url("fonts/NotoNastaliqUrdu-Regular.ttf") format("truetype"); font-weight:400 700; font-display:swap; }
+
+/* ---- Theme tokens -------------------------------------------------------- */
+:root,
+[data-theme="dark-ambient"] {
+  --bg:#0e1413; --bg-2:#131b1a; --surface:#18211f; --surface-2:#1f2a28; --line:#2a3633;
+  --arabic:#f4efe3; --translit:#c9b78c; --translation:#cfd6d2; --muted:#7d8a85;
+  --accent:#c9a85a; --accent-2:#8fcaa9; --progress:#c9a85a;
+  --chip-bg:rgba(201,168,90,.12); --chip-fg:#d8c089;
+  --shadow:0 18px 50px rgba(0,0,0,.45);
+  --hero-glow:radial-gradient(120% 80% at 50% 0%, rgba(201,168,90,.10), transparent 60%);
+  --geo-opacity:.05; --on-accent:#161003;
+}
+[data-theme="gold-navy"] {
+  --bg:#0a1428; --bg-2:#0e1c38; --surface:#11203f; --surface-2:#16294e; --line:#233a63;
+  --arabic:#fbf6e9; --translit:#e3c98a; --translation:#d4ddec; --muted:#8294b4;
+  --accent:#e6c168; --accent-2:#6f9bd8; --progress:#e6c168;
+  --chip-bg:rgba(230,193,104,.14); --chip-fg:#ecd494;
+  --shadow:0 18px 50px rgba(2,8,23,.55);
+  --hero-glow:radial-gradient(120% 80% at 50% 0%, rgba(230,193,104,.12), transparent 60%);
+  --geo-opacity:.06; --on-accent:#161003;
+}
+[data-theme="haram-light"] {
+  --bg:#f4efe6; --bg-2:#efe8db; --surface:#ffffff; --surface-2:#faf6ee; --line:#e2d8c6;
+  --arabic:#2a2418; --translit:#9a7b3c; --translation:#4a4536; --muted:#9c9583;
+  --accent:#b08828; --accent-2:#4f7d63; --progress:#b08828;
+  --chip-bg:rgba(176,136,40,.12); --chip-fg:#8a6a1e;
+  --shadow:0 16px 40px rgba(80,60,20,.14);
+  --hero-glow:radial-gradient(120% 80% at 50% 0%, rgba(176,136,40,.08), transparent 60%);
+  --geo-opacity:.05; --on-accent:#ffffff;
+}
+[data-theme="green-classic"] {
+  --bg:#0c1b14; --bg-2:#0f2218; --surface:#12281d; --surface-2:#173124; --line:#224534;
+  --arabic:#f3efe0; --translit:#d4b86a; --translation:#cbd8cd; --muted:#7c9483;
+  --accent:#d8b85e; --accent-2:#57b489; --progress:#d8b85e;
+  --chip-bg:rgba(216,184,94,.14); --chip-fg:#e0c47c;
+  --shadow:0 18px 50px rgba(0,0,0,.5);
+  --hero-glow:radial-gradient(120% 80% at 50% 0%, rgba(87,180,137,.10), transparent 60%);
+  --geo-opacity:.05; --on-accent:#161003;
+}
+[data-theme="high-contrast"] {
+  --bg:#000000; --bg-2:#000000; --surface:#0a0a0a; --surface-2:#161616; --line:#5a5a5a;
+  --arabic:#ffffff; --translit:#ffe14d; --translation:#ffffff; --muted:#d8d8d8;
+  --accent:#ffe14d; --accent-2:#6ad1ff; --progress:#ffe14d;
+  --chip-bg:#262100; --chip-fg:#ffe14d;
+  --shadow:0 0 0 rgba(0,0,0,0);
+  --hero-glow:none; --geo-opacity:0; --on-accent:#000000;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body {
+  margin:0; padding:0; height:100%; width:100%; overflow:hidden;
+  background:var(--bg); color:var(--translation);
+  font-family:"Segoe UI","Helvetica Neue",system-ui,sans-serif;
+  -webkit-text-size-adjust:100%; overscroll-behavior:none;
+}
+body {
+  background:var(--hero-glow), linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  transition:background-color .4s ease;
+}
+button { font-family:inherit; color:inherit; cursor:pointer; border:none; background:none; }
+:focus-visible { outline:3px solid var(--accent); outline-offset:2px; border-radius:10px; }
+.arabic { -webkit-user-select:text; user-select:text; }
+.hidden { display:none !important; }
+
+.bg-geometry {
+  position:fixed; inset:0; width:100%; height:100%; z-index:0;
+  opacity:var(--geo-opacity); pointer-events:none;
+  color:var(--accent);
+}
+
+/* ---- App shell ----------------------------------------------------------- */
+#app {
+  position:fixed; inset:0; z-index:1;
+  display:flex; flex-direction:column;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+
+/* ---- Top bar ------------------------------------------------------------- */
+.topbar { display:flex; align-items:center; gap:12px; padding:14px 18px 6px; }
+.brand-mark { width:30px; height:30px; flex:0 0 auto; display:grid; place-items:center; }
+.brand-mark svg { width:30px; height:30px; }
+.section-pick {
+  flex:1 1 auto; min-width:0; display:flex; flex-direction:column; align-items:flex-start;
+  gap:1px; text-align:left; border-radius:12px; padding:4px 6px;
+}
+.section-pick .eyebrow {
+  font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); font-weight:600;
+}
+.section-pick .current {
+  display:flex; align-items:center; gap:7px; font-family:"ReemKufi",sans-serif;
+  font-size:17px; color:var(--arabic); font-weight:500;
+  max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.section-pick .current .caret { color:var(--accent); font-size:11px; }
+.icon-btn {
+  width:44px; height:44px; flex:0 0 auto; display:grid; place-items:center; border-radius:12px;
+  color:var(--arabic); transition:background .2s ease, transform .1s ease;
+}
+.icon-btn:active { transform:scale(.92); }
+.icon-btn:hover { background:var(--surface-2); }
+.icon-btn svg { width:22px; height:22px; }
+.icon-btn.ghost svg { width:20px; height:20px; }
+
+/* ---- Prayer ribbon ------------------------------------------------------- */
+.prayer-ribbon {
+  position:relative; z-index:1; margin:4px 18px 0; padding:7px 14px;
+  display:flex; align-items:center; gap:10px;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  font-size:12.5px; color:var(--muted);
+}
+.prayer-ribbon.hide { display:none; }
+.prayer-ribbon .next { color:var(--accent); font-weight:700; }
+.prayer-ribbon .time { color:var(--arabic); font-weight:600; margin-left:auto; font-variant-numeric:tabular-nums; }
+.prayer-ribbon .approx { font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:1px 5px; }
+.prayer-ribbon .dot { width:4px; height:4px; border-radius:50%; background:var(--line); }
+
+/* ---- Reading stage ------------------------------------------------------- */
+.stage { position:relative; min-height:0; flex:1 1 auto; display:flex; align-items:stretch; justify-content:center; padding:10px 16px 4px; z-index:1; }
+.reader {
+  position:relative; width:100%; max-width:760px; display:flex; flex-direction:column;
+  background:var(--surface); border:1px solid var(--line); border-radius:22px;
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.reader::before { content:""; position:absolute; top:0; left:24px; right:24px; height:2px; background:linear-gradient(90deg, transparent, var(--accent), transparent); opacity:.55; }
+.reader-scroll {
+  flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:var(--line) transparent;
+  padding:26px 26px 30px; display:flex; flex-direction:column; gap:18px;
+}
+.reader-scroll::-webkit-scrollbar { width:6px; }
+.reader-scroll::-webkit-scrollbar-thumb { background:var(--line); border-radius:6px; }
+.reader[data-size="short"] .reader-scroll,
+.reader[data-size="normal"] .reader-scroll { justify-content:safe center; }
+.reader[data-size="long"] .reader-scroll,
+.reader[data-size="very_long"] .reader-scroll { justify-content:flex-start; }
+/* Simple mode enlarges content; never center (it clips the top), always
+   top-align and keep it scrollable. */
+body.easy .reader-scroll { justify-content:flex-start !important; padding-top:20px; }
+
+/* meta row */
+.meta-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.chip { font-size:11px; font-weight:600; letter-spacing:.04em; padding:4px 11px; border-radius:999px; background:var(--chip-bg); color:var(--chip-fg); }
+.chip.type { background:transparent; color:var(--muted); border:1px solid var(--line); }
+.chip.repeat { background:transparent; color:var(--accent-2); border:1px solid var(--line); }
+.flow-tag { font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-2); font-weight:700; }
+.verify { margin-left:auto; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:5px; }
+.verify .v-dot { width:7px; height:7px; border-radius:50%; background:var(--accent-2); }
+.verify.quran .v-dot { background:var(--accent); }
+.verify.hadith .v-dot { background:var(--accent-2); }
+.verify.compilation .v-dot { background:#d98b5a; }
+.copy-btn { width:34px; height:34px; flex:0 0 auto; display:grid; place-items:center; border-radius:10px; color:var(--muted); border:1px solid var(--line); transition:color .2s, background .2s, transform .1s; }
+.copy-btn svg { width:16px; height:16px; }
+.copy-btn:hover { color:var(--accent); background:var(--surface-2); }
+.copy-btn:active { transform:scale(.9); }
+body.no-copy .copy-btn { display:none; }
+
+.item-title { font-family:"ReemKufi",sans-serif; font-weight:500; font-size:15px; color:var(--arabic); opacity:.92; margin:0; }
+
+/* Arabic hero — script-aware */
+.arabic {
+  direction:rtl; text-align:center; color:var(--arabic);
+  font-size:var(--ar-size, 34px); line-height:var(--ar-lh, 1.95);
+  word-break:keep-all; overflow-wrap:normal; letter-spacing:0; margin:4px 0;
+  font-family:"Scheherazade","Amiri",serif;
+}
+.arabic[data-script="indopak"] { font-family:"NastaliqUrdu","Scheherazade",serif; }
+.arabic[data-script="naskh"]   { font-family:"Scheherazade","Amiri",serif; }
+.reader[data-size="very_long"] .arabic { text-align:right; }
+
+.translit { font-style:italic; color:var(--translit); text-align:center; line-height:1.7; font-size:var(--tl-size, 16px); }
+.translation { color:var(--translation); text-align:center; line-height:1.7; font-size:var(--tr-size, 17px); }
+.reader[data-size="very_long"] .translit,
+.reader[data-size="very_long"] .translation { text-align:left; }
+.source-row { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:2px; }
+.reader[data-size="very_long"] .source-row { justify-content:flex-start; }
+.source { font-size:12.5px; color:var(--muted); border-top:1px solid var(--line); padding-top:12px; width:100%; text-align:center; }
+.reader[data-size="very_long"] .source { text-align:left; }
+
+/* scroll affordance */
+.scroll-hint {
+  position:absolute; left:50%; bottom:8px; transform:translateX(-50%);
+  display:none; align-items:center; gap:5px; font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--muted); pointer-events:none;
+  background:linear-gradient(180deg, transparent, var(--surface) 60%); padding:14px 14px 6px;
+}
+.reader.can-scroll .scroll-hint { display:flex; animation:bob 1.8s ease-in-out infinite; }
+@keyframes bob { 0%,100%{transform:translate(-50%,0)} 50%{transform:translate(-50%,4px)} }
+
+/* slide transitions */
+.reader-scroll.swap-out-left  { animation:outL .18s ease forwards; }
+.reader-scroll.swap-out-right { animation:outR .18s ease forwards; }
+.reader-scroll.swap-in-left   { animation:inL .26s ease; }
+.reader-scroll.swap-in-right  { animation:inR .26s ease; }
+@keyframes outL { to { opacity:0; transform:translateX(-26px);} }
+@keyframes outR { to { opacity:0; transform:translateX(26px);} }
+@keyframes inL  { from { opacity:0; transform:translateX(26px);} }
+@keyframes inR  { from { opacity:0; transform:translateX(-26px);} }
+
+/* ---- Bottom bar: large, elderly-friendly nav ---------------------------- */
+.bottombar { display:flex; align-items:center; gap:14px; padding:8px 20px 16px; }
+.nav-btn {
+  min-height:60px; flex:0 0 auto; border-radius:16px; padding:0 18px;
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface); border:1px solid var(--line); color:var(--arabic);
+  font-size:14px; font-weight:600; transition:transform .1s ease, background .2s, border-color .2s;
+}
+.nav-btn:active { transform:scale(.94); }
+.nav-btn:hover { background:var(--surface-2); border-color:var(--accent); }
+.nav-btn svg { width:24px; height:24px; }
+.nav-label { display:none; }
+@media (min-width:560px) { .nav-label { display:inline; } }
+.progress-wrap { flex:1 1 auto; display:flex; flex-direction:column; gap:6px; }
+.progress-track { height:5px; border-radius:5px; background:var(--line); overflow:hidden; }
+.progress-fill { height:100%; width:0; background:var(--progress); border-radius:5px; transition:width .3s ease; }
+.counter { display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.counter .auto-flag { color:var(--accent); font-weight:700; opacity:0; transition:opacity .2s; }
+.counter .auto-flag.on { opacity:1; }
+
+/* ==========================  EASY VIEW  ================================== */
+body.easy .nav-btn { min-height:72px; font-size:17px; padding:0 24px; border-width:2px; }
+body.easy .nav-btn svg { width:30px; height:30px; }
+body.easy .reader-scroll { gap:24px; padding:30px 28px 34px; }
+body.easy .translit { font-size:calc(var(--tl-size, 16px) * 1.12); }
+body.easy .translation { font-size:calc(var(--tr-size, 17px) * 1.12); }
+body.easy .icon-btn { width:52px; height:52px; }
+body.easy .icon-btn svg { width:26px; height:26px; }
+body.easy .chip { font-size:13px; padding:5px 13px; }
+body.easy .section-pick .current { font-size:20px; }
+
+/* ============================  TABLET  ================================== */
+@media (min-width:680px) {
+  .topbar { padding:18px 28px 8px; }
+  .section-pick .current { font-size:19px; }
+  .reader-scroll { padding:40px 48px 44px; gap:22px; }
+  .prayer-ribbon { margin:6px 28px 0; font-size:13.5px; padding:9px 18px; }
+  .bottombar { padding:10px 30px 22px; }
+}
+@media (min-width:900px) and (orientation:landscape) {
+  .reader { max-width:1100px; }
+  .reader-scroll {
+    display:grid; grid-template-columns:1.35fr .9fr;
+    grid-template-areas:"meta meta" "arabic title" "arabic side";
+    grid-template-rows:auto auto 1fr; gap:10px 40px; align-content:center; padding:44px 52px;
+  }
+  .reader-scroll .meta-row { grid-area:meta; }
+  .reader-scroll .item-title { grid-area:title; align-self:end; }
+  .reader-scroll .arabic { grid-area:arabic; align-self:center; text-align:center; }
+  .reader-scroll .side-zone { grid-area:side; align-self:start; border-left:1px solid var(--line); padding-left:36px; display:flex; flex-direction:column; gap:16px; }
+  .reader-scroll .translit, .reader-scroll .translation { text-align:left; }
+  .reader-scroll .source { text-align:left; border-top:none; padding-top:0; }
+  .reader-scroll .source-row { justify-content:flex-start; }
+}
+@media not all and (min-width:900px) and (orientation:landscape) {
+  .side-zone { display:contents; }
+}
+@media (max-height:480px) {
+  .reader[data-size="short"] .reader-scroll,
+  .reader[data-size="normal"] .reader-scroll { justify-content:flex-start; }
+  .reader-scroll { padding:16px 24px 20px; gap:12px; }
+  .prayer-ribbon { margin:2px 16px 0; padding:5px 12px; }
+}
+
+/* ====================  ANDROID TV / LEANBACK  =========================== */
+body.tv { font-size:18px; }
+body.tv .topbar { padding:34px 56px 10px; gap:20px; }
+body.tv .section-pick .current { font-size:26px; }
+body.tv .section-pick .eyebrow { font-size:13px; }
+body.tv .icon-btn { width:60px; height:60px; }
+body.tv .icon-btn svg { width:30px; height:30px; }
+body.tv .prayer-ribbon { margin:8px 56px 0; font-size:18px; padding:12px 24px; }
+body.tv .stage { padding:18px 56px 8px; }
+body.tv .reader { max-width:1500px; border-radius:28px; }
+body.tv .reader-scroll { padding:46px 70px 52px; gap:26px; }
+body.tv .bottombar { padding:14px 56px 34px; gap:24px; }
+body.tv .nav-btn { min-height:84px; font-size:22px; padding:0 34px; border-width:2px; }
+body.tv .nav-btn svg { width:34px; height:34px; }
+body.tv .nav-label { display:inline; }
+body.tv .chip { font-size:15px; padding:6px 15px; }
+body.tv .item-title { font-size:22px; }
+body.tv .copy-btn { display:none; }      /* no clipboard need on TV */
+/* Strong, unmistakable D-pad focus from sofa distance */
+body.tv :focus, body.tv :focus-visible {
+  outline:4px solid var(--accent); outline-offset:4px; border-radius:14px;
+}
+body.tv .nav-btn:focus, body.tv .icon-btn:focus, body.tv .section-pick:focus {
+  background:var(--chip-bg); border-color:var(--accent);
+  box-shadow:0 0 0 4px var(--accent); transform:scale(1.04);
+}
+body.tv .reader:focus { outline:none; box-shadow:var(--shadow), 0 0 0 3px var(--accent); }
+body.tv .sec-item:focus { background:var(--chip-bg); outline:4px solid var(--accent); outline-offset:-2px; }
+
+/* ---- Sheets -------------------------------------------------------------- */
+.scrim { position:fixed; inset:0; background:rgba(0,0,0,.55); opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:40; backdrop-filter:blur(2px); }
+.scrim.open { opacity:1; pointer-events:auto; }
+.sheet {
+  position:fixed; left:0; right:0; bottom:0; z-index:50; max-height:88vh;
+  display:flex; flex-direction:column; background:var(--surface);
+  border-top:1px solid var(--line); border-radius:24px 24px 0 0;
+  transform:translateY(102%); transition:transform .32s cubic-bezier(.4,0,.2,1);
+  box-shadow:var(--shadow); padding-bottom:env(safe-area-inset-bottom);
+}
+.sheet.open { transform:translateY(0); }
+.sheet-grab { width:42px; height:4px; border-radius:4px; background:var(--line); margin:12px auto 4px; }
+.sheet-head { display:flex; align-items:center; gap:12px; padding:6px 24px 12px; border-bottom:1px solid var(--line); }
+.sheet-head h2 { font-family:"ReemKufi",sans-serif; font-weight:500; font-size:18px; color:var(--arabic); margin:0; flex:1; }
+.sheet-body { overflow-y:auto; -webkit-overflow-scrolling:touch; padding:8px 0; }
+@media (min-width:900px) {
+  .sheet { left:auto; right:0; top:0; bottom:0; width:460px; max-height:none; border-radius:24px 0 0 24px; border-top:none; border-left:1px solid var(--line); transform:translateX(102%); }
+  .sheet.open { transform:translateX(0); }
+}
+body.tv .sheet { left:auto; right:0; top:0; bottom:0; width:620px; max-height:none; border-radius:24px 0 0 24px; transform:translateX(102%); }
+body.tv .sheet.open { transform:translateX(0); }
+body.tv .sheet-head h2 { font-size:26px; }
+
+/* section/view list */
+.sec-list { display:flex; flex-direction:column; padding:6px 12px 16px; }
+.sec-head { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); font-weight:700; padding:14px 16px 6px; }
+.sec-item { display:flex; align-items:center; gap:12px; width:100%; padding:15px 16px; border-radius:14px; text-align:left; color:var(--translation); font-size:15.5px; }
+.sec-item:hover { background:var(--surface-2); }
+.sec-item.active { background:var(--chip-bg); color:var(--chip-fg); font-weight:600; }
+.sec-item .sec-name { flex:1; }
+.sec-item .sec-sub { font-size:12px; color:var(--muted); }
+.sec-item .sec-count { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; background:var(--surface-2); border-radius:999px; padding:2px 9px; }
+.sec-item.active .sec-count { color:var(--chip-fg); }
+.sec-item.primary { border:1px solid var(--accent); }
+body.tv .sec-item { font-size:21px; padding:20px; }
+
+/* settings groups */
+.set-group { padding:14px 24px 6px; }
+.set-group > .grp-title { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); font-weight:700; margin:4px 0 12px; }
+.set-row { display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--line); }
+.set-row:last-child { border-bottom:none; }
+.set-row .label { flex:1; }
+.set-row .label .name { font-size:15px; color:var(--arabic); }
+.set-row .label .desc { font-size:12px; color:var(--muted); margin-top:2px; line-height:1.4; }
+body.tv .set-row .label .name { font-size:20px; }
+body.tv .set-row .label .desc { font-size:15px; }
+
+/* toggle */
+.switch { position:relative; width:54px; height:32px; flex:0 0 auto; }
+.switch input { opacity:0; width:0; height:0; }
+.switch .track { position:absolute; inset:0; border-radius:32px; background:var(--surface-2); border:1px solid var(--line); transition:.2s; }
+.switch .track::after { content:""; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:var(--muted); transition:.2s; }
+.switch input:checked + .track { background:var(--chip-bg); border-color:var(--accent); }
+.switch input:checked + .track::after { background:var(--accent); transform:translateX(22px); }
+.switch input:focus-visible + .track { outline:3px solid var(--accent); outline-offset:2px; }
+
+/* stepper */
+.stepper { display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+.stepper button { width:40px; height:40px; border-radius:11px; background:var(--surface-2); border:1px solid var(--line); color:var(--arabic); font-size:20px; font-weight:700; display:grid; place-items:center; }
+.stepper button:active { transform:scale(.9); }
+.stepper .val { min-width:56px; text-align:center; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+
+/* segmented */
+.seg { display:flex; gap:6px; flex-wrap:wrap; flex:0 0 auto; }
+.seg button { padding:9px 14px; border-radius:11px; font-size:13px; background:var(--surface-2); border:1px solid var(--line); color:var(--translation); }
+.seg button.active { background:var(--chip-bg); border-color:var(--accent); color:var(--chip-fg); font-weight:600; }
+body.tv .seg button { font-size:17px; padding:12px 18px; }
+
+/* theme swatches */
+.theme-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; padding:4px 0 6px; }
+@media (min-width:520px) { .theme-grid { grid-template-columns:repeat(3,1fr); } }
+.theme-card { border-radius:14px; border:2px solid var(--line); padding:12px; display:flex; flex-direction:column; gap:9px; text-align:left; transition:border-color .2s; }
+.theme-card.active { border-color:var(--accent); }
+.theme-card .swatch { height:38px; border-radius:9px; position:relative; overflow:hidden; }
+.theme-card .swatch .a { position:absolute; inset:0; }
+.theme-card .swatch .b { position:absolute; right:8px; top:8px; bottom:8px; width:30%; border-radius:6px; }
+.theme-card .tname { font-size:12.5px; color:var(--arabic); }
+
+/* about */
+.about { padding:6px 24px 18px; color:var(--muted); font-size:13px; line-height:1.6; }
+.about strong { color:var(--arabic); }
+.about .badge { display:inline-block; margin-top:8px; padding:4px 10px; border-radius:8px; background:var(--chip-bg); color:var(--chip-fg); font-size:11.5px; font-weight:600; }
+.about .kv { margin-top:10px; display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-size:12.5px; }
+.about .kv span:nth-child(odd) { color:var(--arabic); }
+
+/* sticky Save & Apply */
+.sheet-foot { position:sticky; bottom:0; padding:14px 24px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(180deg, transparent, var(--surface) 30%); border-top:1px solid var(--line); }
+.btn-apply { width:100%; min-height:60px; border-radius:16px; background:var(--accent); color:var(--on-accent); font-size:17px; font-weight:700; letter-spacing:.02em; display:grid; place-items:center; transition:transform .1s ease, filter .2s; }
+.btn-apply:active { transform:scale(.985); filter:brightness(1.05); }
+body.tv .btn-apply { min-height:78px; font-size:22px; }
+
+/* toast */
+.toast { position:fixed; left:50%; bottom:calc(28px + env(safe-area-inset-bottom)); transform:translate(-50%,20px); z-index:80; background:var(--surface-2); color:var(--arabic); border:1px solid var(--line); border-radius:12px; padding:12px 20px; font-size:14px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; }
+.toast.show { opacity:1; transform:translate(-50%,0); }
+body.tv .toast { font-size:20px; padding:16px 28px; }
+
+/* splash */
+#splash { position:fixed; inset:0; z-index:100; display:grid; place-items:center; background:var(--bg); transition:opacity .5s ease; }
+#splash.gone { opacity:0; pointer-events:none; }
+#splash .mark { width:76px; height:76px; animation:pulse 2.2s ease-in-out infinite; }
+#splash .name { margin-top:18px; font-family:"ReemKufi",sans-serif; color:var(--arabic); font-size:19px; letter-spacing:.04em; }
+#splash .ar { margin-top:6px; font-family:"Scheherazade",serif; color:var(--accent); font-size:24px; }
+@keyframes pulse { 0%,100%{opacity:.6; transform:scale(.97)} 50%{opacity:1; transform:scale(1.03)} }
+
+@media (prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+
+/* ==========================================================================
+   Rev-A visual uplift (Dua & Zikr) — additive, theme-token driven.
+   Depth, atmosphere, and calmer motion. No layout/structure changes.
+   ========================================================================== */
+
+/* Layered atmosphere: a soft top glow + corner light + gentle vignette,
+   composited behind the app shell. Pure decoration, never interactive. */
+body::after {
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(70% 45% at 50% -8%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 62%),
+    radial-gradient(45% 35% at 92% 8%, color-mix(in srgb, var(--accent-2) 10%, transparent), transparent 60%),
+    radial-gradient(120% 100% at 50% 120%, color-mix(in srgb, var(--bg) 0%, transparent), color-mix(in srgb, #000 26%, transparent) 100%);
+}
+[data-theme="high-contrast"] body::after { background:none; }
+
+/* Denser, edge-faded geometry so the backdrop reads as texture, not noise. */
+.bg-geometry {
+  opacity:calc(var(--geo-opacity) * 1.5);
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 18%, #000 38%, transparent 86%);
+          mask-image:radial-gradient(120% 90% at 50% 18%, #000 38%, transparent 86%);
+}
+
+/* Reading card: more depth, a luminous gold hairline, subtle surface gradient,
+   and a calm entrance each time an item mounts. */
+.reader {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 60%, var(--surface)) 0%, var(--surface) 46%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--accent) 22%, transparent) inset,
+    0 28px 70px -28px rgba(0,0,0,.6),
+    var(--shadow);
+  animation:reader-rise .5s cubic-bezier(.2,.7,.2,1) both;
+}
+.reader::before { opacity:.7; height:2px; filter:drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 60%, transparent)); }
+@keyframes reader-rise { from { opacity:0; transform:translateY(10px) scale(.992); } to { opacity:1; transform:none; } }
+[data-theme="high-contrast"] .reader { animation:none; background:var(--surface); }
+
+/* Prayer ribbon: a touch of gradient + a soft accent edge + glowing next label. */
+.prayer-ribbon {
+  background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, var(--surface)), var(--surface));
+  border-color:color-mix(in srgb, var(--accent) 24%, var(--line));
+  box-shadow:0 8px 24px -16px rgba(0,0,0,.7);
+}
+.prayer-ribbon .next { text-shadow:0 0 14px color-mix(in srgb, var(--accent) 45%, transparent); }
+.prayer-ribbon .dot  { background:color-mix(in srgb, var(--accent) 55%, var(--line)); }
+
+/* Chips & verification: slightly softer, with a hairline ring for definition. */
+.chip { box-shadow:0 0 0 1px color-mix(in srgb, var(--chip-fg) 18%, transparent) inset; }
+.verify .v-dot { box-shadow:0 0 8px color-mix(in srgb, currentColor 0%, transparent); }
+
+/* Stronger, friendlier focus ring for D-pad / TV. */
+:focus-visible { outline:3px solid var(--accent); outline-offset:3px;
+  box-shadow:0 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent); border-radius:12px; }
+
+/* Brand mark gets a faint halo so it feels crafted, not flat. */
+.brand-mark svg { filter:drop-shadow(0 2px 6px color-mix(in srgb, var(--accent) 40%, transparent)); }
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion:reduce) {
+  .reader { animation:none; }
+}
+
+/* ==========================================================================
+   Rev-B: brief Bismillah splash, English/Urdu, stronger Simple mode.
+   ========================================================================== */
+
+/* Splash now leads with the Basmala; the name sits quietly beneath it. */
+#splash .ar {
+  margin-top:20px; font-family:"ScheherazadeNew","Amiri",serif; color:var(--accent);
+  font-size:30px; line-height:1.7; letter-spacing:.01em; direction:rtl;
+  text-shadow:0 0 26px color-mix(in srgb, var(--accent) 40%, transparent);
+  animation:bismillah-in .9s ease both;
+}
+#splash .name {
+  margin-top:12px; font-family:"ReemKufi",sans-serif; color:var(--muted);
+  font-size:14px; letter-spacing:.18em; text-transform:uppercase;
+}
+@keyframes bismillah-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+/* Urdu reading text: proper Nastaliq, generous line height, right-aligned. */
+.translation.ur-text {
+  font-family:"NastaliqUrdu", serif; line-height:2.15; font-size:calc(var(--tr-size, 17px) * 1.18);
+  text-align:right; direction:rtl;
+}
+body.easy .translation.ur-text { line-height:2.3; }
+
+/* In Urdu (RTL) layout, keep Latin transliteration and source left-to-right. */
+body[data-lang="ur"] .translit,
+body[data-lang="ur"] .source,
+body[data-lang="ur"] .stepper .val { direction:ltr; }
+/* Urdu interface strings render via the platform Arabic font; nudge size up
+   slightly for legibility (helpful for elderly users). */
+body[data-lang="ur"] { font-feature-settings:"kern" 1; }
+body[data-lang="ur"] .section-pick .current,
+body[data-lang="ur"] .sheet-head h2,
+body[data-lang="ur"] .nav-label,
+body[data-lang="ur"] .row-name { font-size:1.06em; }
+
+/* Stronger "Simple mode" (easy) for elderly operation:
+   larger hero, bigger nav with always-visible labels, calmer density. */
+body.easy .arabic { line-height:2 !important; }
+body.easy .nav-btn { min-height:80px; font-size:19px; gap:10px; border-width:2px; }
+body.easy .nav-btn .nav-label { display:inline; font-weight:700; }
+body.easy .item-title { font-size:1.25em; }
+body.easy .meta-row .chip.type,
+body.easy .meta-row .flow-tag { display:none; }   /* less clutter */
+body.easy .prayer-ribbon { font-size:15px; padding:11px 18px; }
+body.easy .reader { border-width:2px; }
+
+/* ---- Browse-sheet search (find any du'a by name) ----------------------- */
+.sec-search {
+  width:100%; box-sizing:border-box; margin:0 0 12px;
+  background:var(--surface-2); color:var(--arabic);
+  border:1px solid var(--line); border-radius:12px;
+  padding:13px 15px; font-size:15px; font-family:inherit;
+}
+.sec-search::placeholder { color:var(--muted); }
+.sec-search:focus { outline:none; border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.sec-empty { color:var(--muted); text-align:center; padding:22px 0; font-size:14px; }
+body.easy .sec-search { font-size:18px; padding:16px; }
+
+/* ---- Live-location note ------------------------------------------------ */
+.loc-note { color:var(--accent-2); font-size:13px; line-height:1.5;
+  background:color-mix(in srgb, var(--accent-2) 10%, transparent);
+  border:1px solid color-mix(in srgb, var(--accent-2) 24%, var(--line));
+  border-radius:10px; padding:9px 12px; }
+
+
+/* ===========================================================================
+   Version 02 Rev N — premium adaptive reading system
+   - Serene futuristic dark palette with soft-gold / blue accents
+   - Sticky category tags inside the reader
+   - Elder-friendly Simple mode
+   - 10-foot Android TV scaling and stronger focus indicators
+   =========================================================================== */
+
+[data-theme="dark-ambient"] {
+  --bg:#050a12; --bg-2:#08111f; --surface:#0d1726; --surface-2:#13223a; --line:#243552;
+  --arabic:#fff8e8; --translit:#e8c875; --translation:#d9e7ee; --muted:#9aaeBC;
+  --accent:#f0c96a; --accent-2:#62c8ff; --progress:#f0c96a;
+  --chip-bg:rgba(98,200,255,.12); --chip-fg:#b7e8ff;
+  --shadow:0 28px 90px rgba(0,0,0,.62);
+  --hero-glow:
+    radial-gradient(80% 58% at 50% -16%, rgba(98,200,255,.16), transparent 62%),
+    radial-gradient(62% 45% at 90% 5%, rgba(240,201,106,.12), transparent 62%);
+  --geo-opacity:.075; --on-accent:#08111f;
+}
+
+body {
+  background:
+    radial-gradient(90% 70% at 50% -10%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 60%),
+    radial-gradient(90% 80% at 120% 8%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 64%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+}
+
+.reader {
+  border-radius:clamp(22px, 4vw, 42px);
+  border-color:color-mix(in srgb, var(--accent-2) 18%, var(--line));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 52%, transparent) 0%, var(--surface) 52%),
+    radial-gradient(90% 45% at 50% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 64%);
+  backdrop-filter:blur(16px) saturate(1.12);
+  -webkit-backdrop-filter:blur(16px) saturate(1.12);
+}
+
+.reader-scroll {
+  padding:clamp(22px, 4.8vw, 52px);
+  gap:clamp(18px, 2.8vw, 34px);
+  scroll-padding-top:92px;
+}
+
+.meta-row {
+  position:sticky;
+  top:0;
+  z-index:6;
+  margin:calc(clamp(22px, 4.8vw, 52px) * -1) calc(clamp(22px, 4.8vw, 52px) * -1) 2px;
+  padding:clamp(14px, 2.5vw, 24px) clamp(22px, 4.8vw, 52px) clamp(12px, 2vw, 20px);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, transparent) 0%, color-mix(in srgb, var(--surface) 82%, transparent) 72%, transparent 100%);
+  border-bottom:1px solid color-mix(in srgb, var(--line) 82%, transparent);
+  backdrop-filter:blur(18px) saturate(1.1);
+  -webkit-backdrop-filter:blur(18px) saturate(1.1);
+}
+
+.chip {
+  min-height:32px;
+  display:inline-flex;
+  align-items:center;
+  font-size:clamp(11px, 1.5vw, 14px);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.item-title {
+  font-size:clamp(16px, 2.6vw, 24px);
+  letter-spacing:.01em;
+  color:color-mix(in srgb, var(--arabic) 94%, var(--accent));
+}
+
+.arabic {
+  text-shadow:0 1px 0 rgba(0,0,0,.18);
+  margin-top:2px;
+}
+
+.translit {
+  border-top:1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  padding-top:clamp(16px, 2.5vw, 26px);
+}
+
+.translation {
+  max-width:70ch;
+  margin-inline:auto;
+}
+
+.prayer-ribbon {
+  border-radius:999px;
+  min-height:48px;
+  padding-inline:clamp(16px, 4vw, 34px);
+}
+
+.icon-btn, .nav-btn, .section-pick, .sec-item, .theme-card, .btn-apply {
+  touch-action:manipulation;
+}
+
+:focus-visible,
+body.tv :focus-visible {
+  outline:4px solid var(--accent-2);
+  outline-offset:4px;
+  box-shadow:0 0 0 8px color-mix(in srgb, var(--accent-2) 22%, transparent), 0 0 30px color-mix(in srgb, var(--accent-2) 24%, transparent);
+}
+
+body.easy .reader-scroll {
+  padding:clamp(28px, 6vw, 64px);
+  gap:clamp(24px, 4vw, 44px);
+}
+body.easy .meta-row {
+  margin:calc(clamp(28px, 6vw, 64px) * -1) calc(clamp(28px, 6vw, 64px) * -1) 4px;
+  padding:clamp(18px, 3.5vw, 32px) clamp(28px, 6vw, 64px) clamp(16px, 3vw, 28px);
+}
+body.easy .chip { min-height:40px; font-size:15px; padding-inline:16px; }
+body.easy .copy-btn { width:48px; height:48px; }
+body.easy .translation, body.easy .translit { line-height:1.9; }
+body.easy .item-title { font-size:clamp(20px, 4vw, 30px); }
+
+@media (min-width: 900px) {
+  .reader { max-width:min(1120px, 84vw); }
+  .stage { padding-inline:clamp(28px, 5vw, 80px); }
+  .bottombar { max-width:min(1120px, 84vw); margin-inline:auto; width:100%; }
+}
+
+@media (min-width: 1280px), (min-height: 800px) and (min-width: 900px) {
+  .topbar { padding:clamp(24px, 3vw, 42px) clamp(34px, 5vw, 72px) 12px; }
+  .brand-mark, .brand-mark svg { width:48px; height:48px; }
+  .section-pick .eyebrow { font-size:14px; }
+  .section-pick .current { font-size:clamp(28px, 2.8vw, 42px); }
+  .icon-btn { width:72px; height:72px; border-radius:22px; }
+  .icon-btn svg { width:34px; height:34px; }
+  .prayer-ribbon { margin-inline:clamp(34px, 5vw, 72px); min-height:68px; font-size:clamp(18px, 1.5vw, 24px); }
+  .reader { max-width:min(1360px, 86vw); }
+  .reader-scroll { padding:clamp(44px, 5vw, 82px); }
+  .meta-row {
+    margin:calc(clamp(44px, 5vw, 82px) * -1) calc(clamp(44px, 5vw, 82px) * -1) 8px;
+    padding:clamp(24px, 3vw, 42px) clamp(44px, 5vw, 82px) clamp(18px, 2.4vw, 34px);
+  }
+  .chip { min-height:46px; padding-inline:22px; font-size:18px; }
+  .copy-btn { width:62px; height:62px; border-radius:18px; }
+  .copy-btn svg { width:28px; height:28px; }
+  .item-title { font-size:clamp(28px, 2.3vw, 42px); }
+  .bottombar { max-width:min(1360px, 86vw); padding-block:18px 32px; }
+  .nav-btn { min-width:132px; min-height:104px; border-radius:30px; }
+  .nav-btn svg { width:42px; height:42px; }
+  .nav-label { display:inline; font-size:20px; }
+  .progress-wrap { max-width:520px; }
+  .progress-track { height:13px; border-radius:999px; }
+  .counter { font-size:20px; }
+  .sheet { max-width:min(760px, 60vw); border-radius:36px 36px 0 0; }
+  .sheet-head h2 { font-size:34px; }
+  .sec-item { min-height:82px; font-size:24px; }
+  .row-name { font-size:22px; }
+  .row-desc { font-size:18px; }
+}
+
+body.tv .reader { max-width:1500px; }
+body.tv .reader-scroll { scroll-padding-top:140px; }
+body.tv .meta-row { min-height:92px; }
+body.tv .arabic { letter-spacing:.01em; }
+body.tv .translit { font-size:calc(var(--tl-size, 18px) * 1.22); }
+body.tv .translation { font-size:calc(var(--tr-size, 18px) * 1.22); line-height:1.85; }
+body.tv .sheet { max-width:900px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .reader-scroll.swap-in-left, .reader-scroll.swap-in-right { animation:calm-in .28s ease both; }
+  @keyframes calm-in { from { opacity:.2; transform:translateY(8px); } to { opacity:1; transform:none; } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior:auto !important; }
+  .reader, .reader-scroll, #splash .mark, #splash .ar { animation:none !important; transition:none !important; }
+}

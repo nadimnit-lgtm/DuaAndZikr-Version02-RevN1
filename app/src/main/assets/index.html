@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <title>Dua and Zikr</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body data-theme="dark-ambient">
+
+  <!-- Subtle Islamic geometry backdrop -->
+  <svg class="bg-geometry" viewBox="0 0 120 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <pattern id="geo" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <path d="M20 0 L40 20 L20 40 L0 20 Z" fill="none" stroke="var(--accent)" stroke-width="0.6"/>
+        <circle cx="20" cy="20" r="6" fill="none" stroke="var(--accent)" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect width="120" height="120" fill="url(#geo)"/>
+  </svg>
+
+  <!-- Splash -->
+  <div id="splash">
+    <div style="text-align:center">
+      <svg class="mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="sg" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="var(--accent-2)"/>
+            <stop offset="1" stop-color="var(--accent)"/>
+          </linearGradient>
+        </defs>
+        <path d="M32 5 53 17v30L32 59 11 47V17L32 5Z" stroke="url(#sg)" stroke-width="2.8"/>
+        <path d="M32 13 45 21v22L32 51 19 43V21l13-8Z" stroke="var(--accent)" stroke-width="1.8" opacity=".72"/>
+        <path d="M38 22c-7 0-12 5-12 11s5 11 12 11c-4-2.4-6.2-6.3-6.2-11S34 24.4 38 22Z" fill="var(--accent)"/>
+        <circle cx="43.5" cy="23.5" r="2.6" fill="var(--accent-2)"/>
+        <path d="M32 18v28M18 32h28" stroke="url(#sg)" stroke-width="1.2" opacity=".38"/>
+      </svg>
+      <div class="ar">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+      <div class="name">Dua &amp; Zikr</div>
+    </div>
+  </div>
+
+  <!-- App shell -->
+  <div id="app" aria-hidden="false">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M32 6 52 18v28L32 58 12 46V18L32 6Z" stroke="var(--accent-2)" stroke-width="2.8"/>
+          <path d="M32 14 44 22v20L32 50 20 42V22l12-8Z" stroke="var(--accent)" stroke-width="1.6" opacity=".85"/>
+          <path d="M38 22c-7 0-12 5-12 11s5 11 12 11c-4-2.4-6.2-6.3-6.2-11S34 24.4 38 22Z" fill="var(--accent)"/>
+          <circle cx="43.5" cy="23.5" r="2.6" fill="var(--accent-2)"/>
+        </svg>
+      </span>
+      <button class="section-pick" id="viewPick" aria-haspopup="dialog" aria-label="Choose what to read">
+        <span class="eyebrow" id="viewEyebrow" data-i18n="nowReading">Now reading</span>
+        <span class="current"><span id="curView">Mixed Flow</span><span class="caret">▾</span></span>
+      </button>
+      <button class="icon-btn ghost" id="contrastBtn" aria-label="Toggle high contrast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3 a9 9 0 0 0 0 18 Z" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="icon-btn" id="openSettings" aria-label="Open settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Compact prayer ribbon -->
+    <div class="prayer-ribbon" id="prayerRibbon" role="status" aria-live="polite">
+      <span class="next" id="prayerNext">—</span>
+      <span class="dot"></span>
+      <span id="prayerCity">Riyadh</span>
+      <span class="approx" id="prayerApprox" data-i18n="approx">approx</span>
+      <span class="time" id="prayerTime">--:--</span>
+    </div>
+
+    <!-- Reading stage -->
+    <main class="stage">
+      <article class="reader" id="reader" data-size="normal" aria-live="polite" tabindex="-1">
+        <div class="reader-scroll" id="readerScroll">
+          <div class="meta-row">
+            <span class="chip" id="mCategory">Quranic Duas</span>
+            <span class="chip type" id="mType">Dua</span>
+            <span class="chip repeat hidden" id="mRepeat">×1</span>
+            <span class="flow-tag" id="mFlowTag"></span>
+            <span class="verify" id="mVerify"><span class="v-dot"></span><span id="mVerifyText">Authentic</span></span>
+            <button class="copy-btn" id="copyBtn" aria-label="Copy this dua" title="Copy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            </button>
+          </div>
+          <h1 class="item-title" id="mTitle"></h1>
+          <div class="arabic" id="mArabic" dir="rtl"></div>
+          <div class="side-zone">
+            <p class="translit" id="mTranslit"></p>
+            <p class="translation" id="mTranslation"></p>
+            <div class="source-row"><span class="source" id="mSource"></span></div>
+          </div>
+        </div>
+        <div class="scroll-hint" data-i18n="scroll">scroll ⌄</div>
+      </article>
+    </main>
+
+    <!-- Bottom bar -->
+    <footer class="bottombar">
+      <button class="nav-btn" id="prevBtn" aria-label="Previous" data-i18n-aria="prev">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        <span class="nav-label" data-i18n="prev">Previous</span>
+      </button>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="counter">
+          <span id="counterText">1 / 1</span>
+          <span class="auto-flag" id="autoFlag">AUTO</span>
+        </div>
+      </div>
+      <button class="nav-btn" id="nextBtn" aria-label="Next" data-i18n-aria="next">
+        <span class="nav-label" data-i18n="next">Next</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </footer>
+  </div>
+
+  <!-- Scrim -->
+  <div class="scrim" id="scrim"></div>
+
+  <!-- View picker sheet (Mixed / categories / sections) -->
+  <section class="sheet" id="sectionSheet" role="dialog" aria-modal="true" aria-label="Choose what to read">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><h2 data-i18n="whatToRead">What to read</h2>
+      <button class="icon-btn" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <input type="search" id="secSearch" class="sec-search" data-i18n-ph="searchDuas" placeholder="Search duas by name…" aria-label="Search duas by name" autocomplete="off" />
+      <div class="sec-list" id="secResults" hidden></div>
+      <div class="sec-list" id="secList"></div>
+    </div>
+  </section>
+
+  <!-- Settings sheet -->
+  <section class="sheet" id="settingsSheet" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head"><h2 data-i18n="settings">Settings</h2>
+      <button class="icon-btn" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body" id="settingsBody"><!-- built by JS --></div>
+    <div class="sheet-foot">
+      <button class="btn-apply" id="applyBtn" data-i18n="saveApply">Save &amp; Apply</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

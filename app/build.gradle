@@ -1,0 +1,64 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// Optional release signing from environment variables (set as GitHub secrets).
+// When no keystore is present, debug builds still work with zero configuration.
+def releaseKeystore = file(System.getenv("KEYSTORE_FILE") ?: "azkar-release.jks")
+
+android {
+    namespace 'com.ahmed.azkartv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.ahmed.azkartv"
+        minSdk 22
+        targetSdk 34
+        versionCode 7
+        versionName "Version 02 Rev N"
+        resourceConfigurations += ['en']
+    }
+
+    signingConfigs {
+        release {
+            if (releaseKeystore.exists()) {
+                storeFile releaseKeystore
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
+        release {
+            minifyEnabled false
+            if (releaseKeystore.exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = '17' }
+
+    packagingOptions {
+        resources.excludes += ['META-INF/*.kotlin_module']
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.activity:activity-ktx:1.9.2'
+    // Secure local asset serving over the appassets origin.
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
